@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guía de Removido - Digital Automatizada</title>
+    <!-- Librería Excel -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Times+New+Roman&display=swap');
+
+        body {
+            background-color: #555;
+            margin: 0;
+            padding: 20px;
+            font-family: 'Times New Roman', Times, serif;
+            display: flex;
+            justify-content: center;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .page {
+            width: 210mm;
+            height: 297mm;
+            background-color: #89c4d6;
+            padding: 12mm 15mm;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+            box-sizing: border-box;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 20px;
+        }
+
+        h1, h2, h3, p { margin: 0; }
+        
+        .header-top {
+            display: flex; 
+            justify-content: space-between; 
+            align-items: flex-start; 
+            margin-bottom: 10px;
+        }
+        
+        .organismo { 
+            width: 60%;
+            display: flex;
+            align-items: center;
+        }
+
+        .organismo img {
+            max-width: 100%;
+            height: auto;
+            max-height: 60px;
+        }
+
+        .header-right-group {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end; 
+            width: 40%;
+        }
+
+        .original-mark { 
+            font-size: 10pt; 
+            font-weight: bold; 
+            text-align: right; 
+            margin-bottom: 5px;
+        }
+
+        .serie-box { 
+            font-size: 16pt; 
+            font-weight: bold; 
+            white-space: nowrap; 
+            display: flex;
+            align-items: center;
+            justify-content: flex-end; 
+        }
+
+        .guia-roja {
+            color: red !important; 
+            font-weight: bold; 
+            font-size: 18pt !important;
+            border: none; 
+            background: transparent; 
+            width: 110px;
+            text-align: left; 
+            margin-left: 5px;
+        }
+
+        .main-title {
+            text-align: center; font-size: 14pt; font-weight: bold;
+            text-decoration: underline; margin: 10px 0 5px 0; text-transform: uppercase;
+        }
+        .sub-title {
+            text-align: center; font-size: 9pt; font-style: italic; margin-bottom: 15px;
+        }
+
+        input[type="text"], input[type="number"], input[type="password"], select {
+            background: transparent; border: none;
+            border-bottom: 1px dotted #000;
+            font-family: 'Courier New', Courier, monospace; font-weight: bold;
+            font-size: 11pt; color: #000; padding: 0 5px; width: 100%;
+        }
+        input:focus, select:focus { outline: none; background-color: rgba(255,255,255,0.3); }
+        select { -webkit-appearance: none; -moz-appearance: none; text-align-last: center; border-bottom: none; }
+
+        .form-line { display: flex; margin-bottom: 6px; align-items: baseline; font-size: 10pt; }
+        .form-line label { white-space: nowrap; margin-right: 5px; font-weight: bold; font-style: italic; }
+
+        table {
+            width: 100%; border-collapse: collapse; margin-top: 5px;
+            border: 2px solid #000; background-color: transparent;
+        }
+        th {
+            border: 1px solid #000; font-size: 9pt; text-align: center; padding: 4px;
+            font-weight: normal; background-color: rgba(255,255,255,0.1);
+        }
+        td { border: 1px solid #000; height: 24px; padding: 0; position: relative; }
+        td input { border: none; text-align: center; width: 95%; height: 100%; }
+        
+        .totals-row td { border-top: 2px solid #000; font-weight: bold; background-color: rgba(0,0,0,0.05); }
+        .btn-del { color: red; font-weight: bold; border: none; background: transparent; cursor: pointer; }
+
+        .add-row-container {
+            margin-top: 5px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .son-section { margin-top: 10px; font-size: 10pt; }
+        .observaciones {
+            margin-top: 10px; border-top: 1px solid #000; padding-top: 5px;
+            font-size: 10pt; font-weight: bold;
+        }
+        .date-place {
+            text-align: right; margin-top: 10px; margin-bottom: 5px; font-size: 10pt;
+            display: flex; justify-content: flex-end; align-items: baseline;
+        }
+
+        .footer-signatures {
+            margin-top: auto; margin-bottom: 10px;
+            display: flex; justify-content: space-between; align-items: flex-start;
+        }
+        .signature-box { text-align: center; width: 42%; font-size: 9pt; }
+        .signature-line { margin-top: 30px; border-top: 1px dashed #000; padding-top: 5px; }
+        
+        .employee-data {
+            font-family: 'Courier New', Courier, monospace; font-size: 9pt; font-weight: bold;
+            color: #000080; white-space: pre-line; min-height: 40px; text-align: left;
+        }
+
+        #employeeDataContainer2 {
+            font-family: 'Courier New', Courier, monospace; font-size: 9pt; font-weight: bold;
+            color: #000080; white-space: pre-line; min-height: 40px; text-align: left;
+        }
+
+        #qrcode-container { 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            margin-top: 5px; 
+        }
+        #qrcode-img { 
+            padding: 4px; 
+            background: white; 
+            border: 1px solid #000; 
+            width: 90px;
+            height: 90px;
+            display: none; 
+        }
+
+        .notes { font-size: 8pt; margin-top: 5px; line-height: 1.4; border-top: 1px solid #000; padding-top: 5px;}
+
+        .vale-tipo-selector {
+            text-align: center;
+            margin-bottom: 15px;
+            font-size: 10pt;
+        }
+
+        .vale-tipo-selector label {
+            margin-right: 20px;
+            font-weight: bold;
+        }
+
+        .vale-tipo-selector input[type="radio"] {
+            width: auto;
+            margin-right: 5px;
+        }
+
+        #vale_productos_detalle {
+            font-size: 10pt; 
+            line-height: 1.4;
+            display: inline;
+        }
+
+        .sidebar {
+            position: fixed; 
+            top: 20px; 
+            left: 20px; 
+            z-index: 1000; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 10px; 
+            width: 160px;
+        }
+
+        .action-btn { 
+            padding: 10px 15px; color: white; border: none; border-radius: 4px; 
+            cursor: pointer; font-size: 14px; text-align: left; 
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.3); display: flex; align-items: center; gap: 8px;
+        }
+        
+        .btn-print { background-color: #2e7d32; }
+        .btn-excel { background-color: #1565c0; }
+        .btn-qr { background-color: #e65100; }
+        .btn-new { background-color: #444; border: 1px solid #777; }
+        .btn-vale { background-color: #7b1fa2; }
+        
+        .btn-add { 
+            background-color: #333; width: 100%; text-align: center; 
+            padding: 5px; color: white; border: none; cursor: pointer; font-size: 12px;
+        }
+
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8);
+            z-index: 9999; display: flex; justify-content: center; align-items: center;
+        }
+        .login-box { background: white; padding: 25px; border-radius: 8px; width: 300px; text-align: center; }
+        .login-box input, .login-box select { width: 90%; margin-bottom: 10px; padding: 8px; border: 1px solid #ccc; }
+        .login-btn { background-color: #1976d2; color: white; padding: 10px; width: 100%; border: none; cursor: pointer; }
+
+        .page-guia { display: flex; }
+        .page-vale { display: none; }
+        
+        .page-vale.show { display: flex; }
+
+        @media print {
+            @page { size: A4; margin: 0; }
+            body { background-color: white; margin: 0; padding: 0; }
+            .page { width: 210mm; height: 297mm; box-shadow: none; margin: 0; page-break-after: always; }
+            .sidebar, .modal-overlay, .btn-del, .no-print, .add-row-container, .vale-tipo-selector { display: none !important; }
+            input, select { border-bottom: none !important; }
+            
+            .page-vale.show { display: flex !important; }
+            .page-guia { display: flex !important; }
+            .page-guia.hide { display: flex !important; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="modal-overlay" id="loginModal">
+        <div class="login-box">
+            <h2>Acceso Forestal</h2>
+            <select id="userSelect">
+                <option value="">Seleccione Usuario...</option>
+                <option value="sanchez">Sánchez Walter Hugo</option>
+                <option value="serrudo">Serrudo Matias Ignacio</option>
+                <option value="prueba">Modo Prueba</option>
+            </select>
+            <input type="password" id="passwordInput" placeholder="Contraseña">
+            <button class="login-btn" id="btnLogin">Ingresar</button>
+            <div id="loginError" style="color:red; display:none; margin-top:5px; font-size:12px;">Contraseña incorrecta</div>
+        </div>
+    </div>
+
+    <div class="sidebar no-print">
+        <button class="action-btn btn-new" id="btnNueva">🔄 Nueva Guía</button>
+        <button class="action-btn btn-print" id="btnPrint">🖨️ Imprimir Todo</button>
+        <button class="action-btn btn-vale" id="btnVale">📄 Activar Vale</button>
+        <button class="action-btn btn-excel" id="btnExcel">📊 Excel</button>
+        <button class="action-btn btn-qr" id="btnQR">🔄 Actualizar QR</button>
+    </div>
+
+    <!-- PÁGINA GUÍA -->
+    <div class="page page-guia">
+        <div class="header-top">
+            <div class="organismo">
+                <img src="membrete_provincia.png" alt="Membrete Provincia de Corrientes">
+            </div>
+            
+            <div class="header-right-group">
+                <div class="original-mark">ORIGINAL</div>
+                <div class="serie-box">
+                    SERIE D - <input type="text" id="guiaNumero" class="guia-roja" readonly value="Cargando...">
+                </div>
+            </div>
+        </div>
+
+        <div class="main-title">GUIA DE REMOVIDO DE PRODUCTOS FORESTALES</div>
+        <div class="sub-title">LEY FORESTAL Nº 13.273 (Art. 18)</div>
+
+        <div class="form-line">
+            <label>Departamento:</label> <input type="text" id="origen_dpto" placeholder="...">
+            <label style="margin-left: 20px;">Provincia:</label> <input type="text" id="origen_prov" value="CORRIENTES">
+        </div>
+
+        <div class="form-line">
+            <label>Conste que el Señor:</label> <input type="text" id="transportista">
+            <label>está autorizado para transportar</label>
+        </div>
+
+        <div class="form-line">
+            <label>la partida de productos forestales que se detalla en esta guía, con destino a:</label>
+            <input type="text" id="destino">
+            <label>siendo</label>
+        </div>
+
+        <div class="form-line">
+            <label>su consignatario el señor</label> <input type="text" id="consignatario">
+        </div>
+
+        <table id="productsTable">
+            <thead>
+                <tr>
+                    <th style="width: 15%;">Número de Piezas</th>
+                    <th style="width: 25%;">Clase de Producto</th>
+                    <th style="width: 15%;">Estado</th>
+                    <th style="width: 20%;">Especie</th>
+                    <th style="width: 12%;">Cantidad</th>
+                    <th style="width: 13%;">Unidad</th>
+                    <th class="no-print" style="width: 20px;"></th>
+                </tr>
+            </thead>
+            <tbody id="tableBody">
+            </tbody>
+            <tfoot>
+                <tr class="totals-row">
+                    <td colspan="4" style="text-align: right; padding-right: 10px;">TOTAL</td>
+                    <td><input type="text" id="grandTotal" readonly value="0"></td>
+                    <td></td>
+                    <td class="no-print"></td>
+                </tr>
+            </tfoot>
+        </table>
+        
+        <div class="add-row-container no-print">
+            <button class="btn-add" id="btnAddRow">+ Agregar Fila</button>
+        </div>
+
+        <div class="form-line son-section">
+            <label>SON:</label> <input type="text" id="sonLetras" readonly placeholder="(Cantidad total en letras)">
+        </div>
+
+        <div class="form-line" style="margin-top: 15px;">
+            <label>(2) Estos productos se encuentran depositados en:</label> <input type="text">
+        </div>
+
+        <div class="form-line">
+            <label>y corresponden a la</label>
+            <label>guía</label> <input type="text" style="width: 80px;">
+            <label>de la</label> <label>Serie</label> <input type="text" style="width: 50px;">
+            <label>Nº</label> <input type="text" style="width: 100px;">
+            <label>Cantidad</label> <input type="text" style="width: 50px;">
+            <label>Nº</label> <input type="text" style="width: 50px;">
+        </div>
+        
+        <div class="form-line">
+            <label style="opacity: 0;">Espacio</label>
+            <label>Nº</label> <input type="text" style="width: 100px;">
+            <label>,</label> <label>Cantidad</label> <input type="text" style="width: 80px;">
+            <label>Nº</label> <input type="text" style="width: 100px;">
+            <label>Cantidad</label> <input type="text" style="width: 50px;">
+            <label>Nº</label> <input type="text" style="width: 50px;">
+        </div>
+
+        <div class="form-line">
+            <label>las que están consignadas a nombre del titular de la presente guía (3) que vence el día</label>
+            <input type="text" id="venc_dia" style="width: 40px;"> <label>de</label> 
+            <input type="text" id="venc_mes" style="width: 100px;"> <label>20</label> 
+            <input type="text" id="venc_anio" style="width: 40px;">
+        </div>
+
+        <div class="observaciones">
+            OBSERVACIONES: <input type="text" style="font-weight: normal;">
+            <input type="text" style="font-weight: normal; margin-top: 5px;">
+        </div>
+
+        <div class="date-place">
+            <input type="text" id="lugar_emision" style="width: 150px; text-align: right;" value="Corrientes">, de 
+            <input type="text" id="fecha_dia" style="width: 30px;"> de 
+            <input type="text" id="fecha_mes" style="width: 100px;"> 20 
+            <input type="text" id="fecha_anio" style="width: 40px;"><br>
+        </div>
+        <div style="text-align: right; font-size: 8pt; margin-right: 50px; margin-top: -5px;">Lugar y Fecha</div>
+
+        <div class="footer-signatures">
+            <div class="signature-box">
+                <br><br>
+                <div class="signature-line">
+                    Firma del Titular de la guía
+                    <div style="margin-top: 5px; text-align: left;">Nombre y apellido aclarado</div>
+                </div>
+            </div>
+            <div class="signature-box">
+                <div class="employee-data" id="employeeDataContainer"></div>
+                <div class="signature-line">
+                    Firma del empleado forestal
+                    <div style="margin-top: 5px; text-align: left;">Categoría, nombre y apellido</div>
+                </div>
+                <div id="qrcode-container">
+                    <img id="qrcode-img" src="" alt="QR">
+                    <div style="font-size: 6pt; margin-top:2px;">ESCANEAR PARA VERIFICAR</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="notes">
+            (1) Táchese lo que no corresponda.<br>
+            (2) Indíquese la cantidad descontada en cada guía de origen.<br>
+            (3) No apta para transporte por ferrocarril.<br>
+            NOTA: Aclárese el medio de transporte: carro, patente; camión, número; embarcación, nombre o número.
+            <div style="text-align: right; margin-top: 5px; font-style: italic;">(ORIGINAL)</div>
+        </div>
+    </div>
+
+    <!-- PÁGINA VALE -->
+    <div class="page page-vale">
+        <div class="header-top">
+            <div class="organismo">
+                <img src="membrete_provincia.png" alt="Membrete Provincia de Corrientes">
+            </div>
+            
+            <div class="header-right-group">
+                <div class="original-mark">ORIGINAL</div>
+                <div class="serie-box" style="font-size: 14pt;">
+                    Nº <input type="text" id="valeNumero" class="guia-roja" readonly style="color: red; font-size: 16pt;">
+                </div>
+            </div>
+        </div>
+
+        <div class="vale-tipo-selector no-print">
+            <label>
+                <input type="radio" name="vale-tipo" value="fuera" checked id="radioFuera">
+                FUERA DE LA PROVINCIA
+            </label>
+            <label>
+                <input type="radio" name="vale-tipo" value="dentro" id="radioDentro">
+                DENTRO DE LA PROVINCIA
+            </label>
+        </div>
+
+        <div class="main-title" id="vale-titulo">VALE PARA EL TRANSPORTE DE PRODUCTOS FORESTALES<br>FUERA DE LA PROVINCIA</div>
+
+        <div class="form-line" style="margin-top: 30px;">
+            <label>Conste que el señor</label>
+            <input type="text" id="vale_transportista" placeholder="...">
+        </div>
+
+        <div class="form-line">
+            <label>está autorizado para transportar en su</label>
+            <input type="text" id="vale_vehiculo" placeholder="tipo de vehículo" style="width: 150px;">
+            <label>Nº patente</label>
+            <input type="text" id="vale_patente" style="width: 120px;">
+        </div>
+
+        <div class="form-line">
+            <label>hasta la cantidad de:</label>
+            <span id="vale_productos_detalle" style="font-weight: bold; margin-left: 5px;"></span>
+        </div>
+
+        <div class="form-line">
+            <label>en estado</label>
+            <input type="text" id="vale_estado" style="width: 150px;">
+            <label>con destino a</label>
+            <input type="text" id="vale_destino" placeholder="...">
+        </div>
+
+        <div class="form-line">
+            <label>correspondiente a la Guía Nº</label>
+            <input type="text" id="vale_guia_num" style="width: 120px;">
+            <label>Serie</label>
+            <input type="text" id="vale_serie" style="width: 60px;">
+        </div>
+
+        <div class="form-line">
+            <label>otorgada a favor de</label>
+            <input type="text" id="vale_beneficiario" placeholder="...">
+        </div>
+
+        <div class="form-line">
+            <label>y que vence el</label>
+            <input type="text" id="vale_venc" style="width: 200px;">
+        </div>
+
+        <div class="date-place" style="margin-top: 80px;">
+            <input type="text" id="vale_lugar" style="width: 150px; text-align: right;">, de 
+            <input type="text" id="vale_dia" style="width: 30px;"> de 
+            <input type="text" id="vale_mes" style="width: 100px;"> 19 
+            <input type="text" id="vale_anio" style="width: 40px;"><br>
+        </div>
+
+        <div class="footer-signatures" style="margin-top: 80px;">
+            <div class="signature-box">
+                <div class="signature-line">
+                    Firma del Camionero
+                </div>
+            </div>
+            <div class="signature-box">
+                <div class="employee-data" id="employeeDataContainer2"></div>
+                <div class="signature-line">
+                    Firma del Empleado Forestal
+                </div>
+            </div>
+        </div>
+
+        <div class="notes">
+            NOTA: En caso de extravío del presente vale, deberá darse cuenta a la autoridad forestal; de lo contrario será responsable de cualquier maniobra que se pretendiera efectuar en el mismo la persona a cuya orden se ha otorgado.
+        </div>
+    </div>
+
+    <script>
+        const users = {
+            "sanchez": { name: "Sánchez Walter Hugo", dni: "25.229.088", cel: "3644-409580", pass: "ws2026x" },
+            "serrudo": { name: "Serrudo Matias Ignacio", dni: "32.745.638", cel: "3794-724272", pass: "ms2026x" },
+            "prueba": { name: "Modo prueba", dni: "32.456.678", cel: "3795-049226", pass: "1234" }
+        };
+        let currentUser = null;
+
+        // ESTA ES LA FUNCIÓN NUEVA QUE SE CONECTA A TU BASE DE DATOS
+        async function inicializar() {
+            // 1. INTENTAR CONECTAR CON EL SERVIDOR
+            try {
+                const response = await fetch('/api/siguiente-numero');
+                if (!response.ok) throw new Error("Error en servidor");
+                const data = await response.json();
+                
+                // SI FUNCIONA, USA EL NÚMERO DE LA BASE DE DATOS
+                document.getElementById('guiaNumero').value = data.numero;
+                document.getElementById('valeNumero').value = data.numero; 
+                
+            } catch (error) {
+                console.error("Error obteniendo número:", error);
+                // Si estás abriendo el archivo localmente (sin el servidor prendido), dará error.
+                // Esto es normal si solo das doble click al index.html
+                document.getElementById('guiaNumero').value = "SIN CONEXIÓN";
+                document.getElementById('valeNumero').value = "SIN CONEXIÓN";
+            }
+
+            // 2. FECHAS AUTOMÁTICAS
+            const d = new Date();
+            document.getElementById('fecha_dia').value = d.getDate();
+            const meses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+            document.getElementById('fecha_mes').value = meses[d.getMonth()];
+            document.getElementById('fecha_anio').value = d.getFullYear().toString().substr(-2);
+            
+            document.getElementById('vale_dia').value = d.getDate();
+            document.getElementById('vale_mes').value = meses[d.getMonth()];
+            document.getElementById('vale_anio').value = d.getFullYear().toString().substr(-2);
+            document.getElementById('vale_lugar').value = "Corrientes";
+            
+            // 3. INICIALIZACIÓN
+            addRow(); addRow(); addRow();
+            updateQRCode();
+            
+            // 4. LISTENERS PARA SINCRONIZAR
+            document.getElementById('transportista').addEventListener('input', sincronizarDatosVale);
+            document.getElementById('destino').addEventListener('input', sincronizarDatosVale);
+            document.getElementById('consignatario').addEventListener('input', sincronizarDatosVale);
+        }
+
+        function intentarLogin() {
+            const u = document.getElementById('userSelect').value;
+            const p = document.getElementById('passwordInput').value;
+            
+            if (!u) {
+                document.getElementById('loginError').textContent = 'Seleccione un usuario';
+                document.getElementById('loginError').style.display = 'block';
+                return;
+            }
+            
+            if (users[u] && users[u].pass === p) {
+                currentUser = users[u];
+                document.getElementById('loginModal').style.display = 'none';
+                const info = `${currentUser.name}\nDNI: ${currentUser.dni}\nCel: ${currentUser.cel}`;
+                document.getElementById('employeeDataContainer').innerText = info;
+                document.getElementById('employeeDataContainer2').innerText = info;
+                updateQRCode();
+                sincronizarDatosVale();
+            } else {
+                document.getElementById('loginError').textContent = 'Contraseña incorrecta';
+                document.getElementById('loginError').style.display = 'block';
+            }
+        }
+
+        function toggleVale() {
+            const valeDiv = document.querySelector('.page-vale');
+            const guiaDiv = document.querySelector('.page-guia');
+            const btn = document.getElementById('btnVale');
+            
+            calculateTotal(); 
+
+            if(valeDiv.classList.contains('show')) {
+                valeDiv.classList.remove('show');
+                guiaDiv.classList.remove('hide');
+                btn.textContent = '📄 Activar Vale';
+            } else {
+                valeDiv.classList.add('show');
+                guiaDiv.classList.add('hide');
+                btn.textContent = '📋 Volver a Guía';
+            }
+        }
+
+        function sincronizarDatosVale() {
+            document.getElementById('vale_transportista').value = document.getElementById('transportista').value;
+            document.getElementById('vale_destino').value = document.getElementById('destino').value;
+            document.getElementById('vale_beneficiario').value = document.getElementById('consignatario').value;
+            document.getElementById('vale_guia_num').value = document.getElementById('guiaNumero').value;
+            document.getElementById('vale_serie').value = 'D';
+            
+            const venc = `${document.getElementById('venc_dia').value}/${document.getElementById('venc_mes').value}/20${document.getElementById('venc_anio').value}`;
+            document.getElementById('vale_venc').value = venc;
+
+            const rows = document.querySelectorAll('#productsTable tbody tr');
+            let productosTexto = "";
+            
+            rows.forEach(row => {
+                const clase = row.querySelector('.inp-clase').value.trim();
+                const especie = row.querySelector('.inp-especie').value.trim();
+                const cant = parseFloat(row.querySelector('.inp-cant').value) || 0;
+                const uni = row.querySelector('.inp-uni').value;
+
+                if (cant > 0 && clase && especie) {
+                    let unidadTexto = uni;
+                    if(uni === 'Tn') unidadTexto = 'TONELADAS';
+                    if(uni === 'm3') unidadTexto = 'METROS CÚBICOS';
+                    if(uni === 'Unid') unidadTexto = 'UNIDADES';
+                    if(uni === 'Kg') unidadTexto = 'KILOGRAMOS';
+
+                    const cantEntera = Math.floor(cant);
+                    const decimales = Math.round((cant % 1) * 100);
+                    const textoLetras = numeroALetras(cantEntera);
+                    
+                    let cantidadCompleta = `${cant} (${textoLetras} ${unidadTexto}`;
+                    if(decimales > 0) cantidadCompleta += ` CON ${decimales}/100`;
+                    cantidadCompleta += ')';
+
+                    if(productosTexto !== "") productosTexto += " - ";
+                    productosTexto += `${cantidadCompleta} de ${clase} de ${especie}`;
+                }
+            });
+
+            const detalleDiv = document.getElementById('vale_productos_detalle');
+            if(productosTexto) {
+                detalleDiv.textContent = productosTexto;
+            } else {
+                detalleDiv.innerHTML = `<em style="color: #666;">(se generará automáticamente)</em>`;
+            }
+        }
+
+        function updateValeTitulo() {
+            const tipo = document.querySelector('input[name="vale-tipo"]:checked').value;
+            const titulo = document.getElementById('vale-titulo');
+            if(tipo === 'fuera') {
+                titulo.innerHTML = 'VALE PARA EL TRANSPORTE DE PRODUCTOS FORESTALES<br>FUERA DE LA PROVINCIA';
+            } else {
+                titulo.innerHTML = 'VALE PARA EL TRANSPORTE DE PRODUCTOS FORESTALES<br>DENTRO DE LA PROVINCIA';
+            }
+        }
+
+        function updateQRCode() {
+            const el = (id) => document.getElementById(id) ? document.getElementById(id).value : "";
+            
+            let texto = `GUÍA: ${el('guiaNumero')}\n`;
+            texto += `VENCE: ${el('venc_dia')}/${el('venc_mes')}/20${el('venc_anio')}\n`;
+            texto += `--- PRODUCTOS ---\n`;
+            
+            const rows = document.querySelectorAll('#productsTable tbody tr');
+            let hasProd = false;
+            
+            rows.forEach(row => {
+                const especie = row.querySelector('.inp-especie').value;
+                const clase = row.querySelector('.inp-clase').value;
+                const cant = row.querySelector('.inp-cant').value;
+                const uni = row.querySelector('.inp-uni').value;
+
+                if(especie || clase || cant) {
+                    texto += `> ${especie || '?'} (${clase || '?'}): ${cant || '0'} ${uni}\n`;
+                    hasProd = true;
+                }
+            });
+
+            if(!hasProd) texto += `(Sin productos cargados)\n`;
+            texto += `TOTAL: ${el('grandTotal')}\n`;
+            texto += `--- EMPLEADO ---\n`;
+            if(currentUser) {
+                texto += `Nombre: ${currentUser.name}\nTel: ${currentUser.cel}`;
+            } else {
+                texto += `No identificado`;
+            }
+
+            const urlData = encodeURIComponent(texto);
+            const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${urlData}`;
+            
+            const img = document.getElementById('qrcode-img');
+            img.src = qrUrl;
+            img.style.display = 'block';
+        }
+
+        function addRow() {
+            const tbody = document.getElementById('tableBody');
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><input type="text" class="inp-piezas" value="N/A"></td>
+                <td><input type="text" class="inp-clase" oninput="calculateTotal()"></td>
+                <td><input type="text" class="inp-estado" value="N/A"></td>
+                <td><input type="text" class="inp-especie" oninput="calculateTotal()"></td>
+                <td><input type="number" class="inp-cant" oninput="calculateTotal()"></td>
+                <td>
+                    <select class="inp-uni" onchange="calculateTotal()">
+                        <option value="Tn">Tn</option>
+                        <option value="Kg">Kg</option>
+                        <option value="m3">m³</option>
+                        <option value="Unid">Unid</option>
+                    </select>
+                </td>
+                <td class="no-print" style="text-align: center;">
+                    <button class="btn-del" onclick="removeRow(this)">x</button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        }
+
+        function removeRow(btn) {
+            const row = btn.parentNode.parentNode;
+            row.parentNode.removeChild(row);
+            calculateTotal();
+        }
+
+        function calculateTotal() {
+            let total = 0;
+            const inputs = document.querySelectorAll('.inp-cant');
+            inputs.forEach(inp => total += parseFloat(inp.value) || 0);
+            document.getElementById('grandTotal').value = total.toFixed(2);
+            
+            const totalEntero = Math.floor(total);
+            const totalDecimales = Math.round((total % 1) * 100);
+            let textoSon = numeroALetras(totalEntero);
+            if(totalDecimales > 0) textoSon += ` CON ${totalDecimales}/100`;
+            textoSon += ' de productos que se detallan en la tabla';
+            document.getElementById('sonLetras').value = textoSon;
+            
+            updateQRCode();
+            sincronizarDatosVale();
+        }
+
+        function exportToExcel() {
+            const header = {
+                "Guía Nº": document.getElementById('guiaNumero').value,
+                "Fecha": `${document.getElementById('fecha_dia').value}/${document.getElementById('fecha_mes').value}/20${document.getElementById('fecha_anio').value}`,
+                "Origen": document.getElementById('origen_dpto').value,
+                "Transportista": document.getElementById('transportista').value,
+                "Destino": document.getElementById('destino').value,
+                "Total General": document.getElementById('grandTotal').value,
+                "Empleado": currentUser ? currentUser.name : "N/A"
+            };
+
+            let data = [];
+            const rows = document.querySelectorAll('#productsTable tbody tr');
+            let hasProd = false;
+
+            rows.forEach(row => {
+                const p = row.querySelector('.inp-piezas').value;
+                const c = row.querySelector('.inp-clase').value;
+                if(p || c) {
+                    hasProd = true;
+                    data.push({
+                        ...header,
+                        "Prod. Piezas": p, "Prod. Clase": c,
+                        "Prod. Especie": row.querySelector('.inp-especie').value,
+                        "Prod. Cantidad": row.querySelector('.inp-cant').value,
+                        "Prod. Unidad": row.querySelector('.inp-uni').value
+                    });
+                }
+            });
+
+            if(!hasProd) data.push({...header, "Estado": "Sin productos"});
+            
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.json_to_sheet(data);
+            XLSX.utils.book_append_sheet(wb, ws, "Guia Forestal");
+            XLSX.writeFile(wb, `Guia_${header["Guía Nº"]}.xlsx`);
+        }
+
+        function numeroALetras(num) {
+            if (num === 0) return "CERO";
+            const unidades = ["", "UN", "DOS", "TRES", "CUATRO", "CINCO", "SEIS", "SIETE", "OCHO", "NUEVE"];
+            const decenas = ["", "DIEZ", "VEINTE", "TREINTA", "CUARENTA", "CINCUENTA", "SESENTA", "SETENTA", "OCHENTA", "NOVENTA"];
+            const diez_y = ["DIEZ", "ONCE", "DOCE", "TRECE", "CATORCE", "QUINCE", "DIECISEIS", "DIECISIETE", "DIECIOCHO", "DIECINUEVE"];
+            const veinti = ["VEINTE", "VEINTIUN", "VEINTIDOS", "VEINTITRES", "VEINTICUATRO", "VEINTICINCO", "VEINTISEIS", "VEINTISIETE", "VEINTIOCHO", "VEINTINUEVE"];
+            const centenas = ["", "CIENTO", "DOSCIENTOS", "TRESCIENTOS", "CUATROCIENTOS", "QUINIENTOS", "SEISCIENTOS", "SETECIENTOS", "OCHOCIENTOS", "NOVECIENTOS"];
+
+            let texto = "";
+
+            if (num >= 1000) {
+                let miles = Math.floor(num / 1000);
+                texto += (miles === 1 ? "MIL" : numeroALetras(miles) + " MIL") + " ";
+                num = num % 1000;
+            }
+
+            if (num >= 100) {
+                if (num === 100) return texto + "CIEN";
+                texto += centenas[Math.floor(num / 100)] + " ";
+                num = num % 100;
+            }
+
+            if (num >= 30) {
+                let d = Math.floor(num / 10);
+                let u = num % 10;
+                texto += decenas[d];
+                if (u > 0) texto += " Y " + unidades[u];
+            } else if (num >= 20) {
+                texto += veinti[num - 20];
+            } else if (num >= 10) {
+                texto += diez_y[num - 10];
+            } else if (num > 0) {
+                texto += unidades[num];
+            }
+
+            return texto.trim();
+        }
+
+        document.getElementById('btnLogin').addEventListener('click', intentarLogin);
+        document.getElementById('passwordInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') intentarLogin();
+        });
+        document.getElementById('btnNueva').addEventListener('click', function() { location.reload(); });
+        document.getElementById('btnPrint').addEventListener('click', function() { window.print(); });
+        document.getElementById('btnVale').addEventListener('click', toggleVale);
+        document.getElementById('btnExcel').addEventListener('click', exportToExcel);
+        document.getElementById('btnQR').addEventListener('click', updateQRCode);
+        document.getElementById('btnAddRow').addEventListener('click', addRow);
+        document.getElementById('radioFuera').addEventListener('change', updateValeTitulo);
+        document.getElementById('radioDentro').addEventListener('change', updateValeTitulo);
+
+        // INICIAR
+        inicializar();
+    </script>
+</body>
+</html>
