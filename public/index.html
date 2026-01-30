@@ -850,50 +850,41 @@
             XLSX.writeFile(wb, `Guia_${header["Guía Nº"]}.xlsx`);
         }
 
-        // --- FUNCIÓN GUARDAR EN DRIVE CORREGIDA (VERSIÓN DEFINITIVA) ---
+        // --- FUNCION CORREGIDA PARA SOLUCIONAR EL PDF EN BLANCO ---
         function guardarEnDrive() {
             const btn = document.getElementById('btnDrive');
             const originalText = btn.textContent;
             btn.textContent = "⏳ Generando PDF completo...";
             btn.disabled = true;
 
-            // 1. Obtener elementos originales
+            // 1. FORZAR SCROLL ARRIBA: Crucial para que html2canvas no genere blanco
+            window.scrollTo(0, 0);
+
+            // 2. Crear contenedor temporal VISIBLE sobre todo
+            const container = document.createElement('div');
+            container.style.cssText = `
+                position: absolute; 
+                top: 0; 
+                left: 0; 
+                width: 210mm; 
+                background: white; 
+                z-index: 99999; 
+                padding: 0;
+            `;
+            document.body.appendChild(container);
+
             const guiaOriginal = document.querySelector('.page-guia');
             const valeOriginal = document.querySelector('.page-vale');
 
-            // 2. Crear un "telón" visible sobre la pantalla (Z-INDEX ALTO)
-            // Esto asegura que HTML2PDF pueda "ver" y renderizar el contenido
-            const container = document.createElement('div');
-            container.style.position = 'fixed';
-            container.style.top = '0';
-            container.style.left = '0';
-            container.style.width = '100%';
-            container.style.height = '100%';
-            container.style.zIndex = '10000'; // Por encima de todo
-            container.style.backgroundColor = '#555'; // Mismo fondo que el body
-            container.style.overflow = 'auto'; // Permitir scroll si es necesario
-            container.style.display = 'flex';
-            container.style.flexDirection = 'column';
-            container.style.alignItems = 'center';
-            container.style.padding = '20px';
-            document.body.appendChild(container);
-
-            // 3. Función auxiliar para clonar y copiar valores
             function clonarPagina(elementoOriginal) {
                 const clone = elementoOriginal.cloneNode(true);
-                
-                // Estilos para el PDF
-                clone.style.margin = '0'; 
-                clone.style.marginBottom = '0'; 
+                clone.style.margin = '0';
                 clone.style.boxShadow = 'none';
-                clone.style.display = 'flex'; 
-                clone.classList.remove('hide'); 
+                clone.style.display = 'flex';
+                clone.classList.remove('hide');
                 clone.classList.add('show');
-                
-                // Forzar salto de página
                 clone.style.pageBreakAfter = 'always';
 
-                // Copiar valores de inputs (CRUCIAL PARA QUE NO SALGA EN BLANCO)
                 const inputsOriginales = elementoOriginal.querySelectorAll('input, select, textarea');
                 const inputsClonados = clone.querySelectorAll('input, select, textarea');
 
@@ -906,16 +897,11 @@
                         if(orig.checked) clon.setAttribute('checked', 'checked');
                     } else if (orig.tagName === 'SELECT') {
                         clon.value = orig.value;
-                        // Para selects, hay que marcar la opción selected explícitamente
                         const options = clon.querySelectorAll('option');
                         options.forEach(opt => {
                             if(opt.value === orig.value) opt.setAttribute('selected', 'selected');
                         });
-                    } else if (orig.tagName === 'TEXTAREA') {
-                        clon.value = orig.value;
-                        clon.innerHTML = orig.value;
                     } else {
-                        // Inputs de texto/numero
                         clon.value = orig.value;
                         clon.setAttribute('value', orig.value);
                     }
@@ -923,17 +909,13 @@
                 return clone;
             }
 
-            // 4. Clonar y agregar al contenedor temporal
             const guiaClone = clonarPagina(guiaOriginal);
             const valeClone = clonarPagina(valeOriginal);
-
-            // Evitar salto de página al final
             valeClone.style.pageBreakAfter = 'avoid';
 
             container.appendChild(guiaClone);
             container.appendChild(valeClone);
 
-            // Nombre del archivo
             const numGuia = document.getElementById('guiaNumero').value || "S_N";
             const filename = `GUIA_Y_VALE_${numGuia}.pdf`;
 
@@ -941,50 +923,51 @@
                 margin:       0,
                 filename:     filename,
                 image:        { type: 'jpeg', quality: 0.98 },
+                // Configuración vital para evitar el blanco: scrollY: 0
                 html2canvas:  { scale: 2, logging: false, scrollY: 0, windowWidth: document.body.scrollWidth },
                 jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
             };
 
-            // 5. Generar PDF
-            html2pdf().set(opt).from(container).outputPdf('datauristring').then(function(pdfAsString) {
-                
-                // Quitar el telón temporal
-                document.body.removeChild(container);
+            // 3. Pequeño retardo para asegurar que el navegador pintó el contenedor
+            setTimeout(() => {
+                html2pdf().set(opt).from(container).outputPdf('datauristring').then(function(pdfAsString) {
+                    
+                    document.body.removeChild(container); // Limpiar
 
-                const payload = {
-                    filename: filename,
-                    fileContent: pdfAsString
-                };
+                    const payload = {
+                        filename: filename,
+                        fileContent: pdfAsString
+                    };
 
-                // Verificar URL
-                if(GOOGLE_SCRIPT_URL.includes("AKfycbxpJzHne2l3gdDa0y4F2B4COXOWOcjWVTrRW")) {
-                     alert("⚠️ Error: Configura tu URL del Script de Google.");
-                     btn.textContent = originalText;
-                     btn.disabled = false;
-                     return;
-                }
-
-                fetch(GOOGLE_SCRIPT_URL, {
-                    method: 'POST',
-                    body: JSON.stringify(payload)
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if(data.status === 'success') {
-                        alert(`✅ Archivo "${filename}" guardado en Drive.`);
-                    } else {
-                        alert("❌ Error: " + data.message);
+                    if(GOOGLE_SCRIPT_URL.includes("AKfycbxpJzHne2l3gdDa0y4F2B4COXOWOcjWVTrRW")) {
+                         alert("⚠️ Error: Configura tu URL del Script de Google.");
+                         btn.textContent = originalText;
+                         btn.disabled = false;
+                         return;
                     }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert("⚠️ Enviado. Verifica tu Drive.");
-                })
-                .finally(() => {
-                    btn.textContent = originalText;
-                    btn.disabled = false;
+
+                    fetch(GOOGLE_SCRIPT_URL, {
+                        method: 'POST',
+                        body: JSON.stringify(payload)
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if(data.status === 'success') {
+                            alert(`✅ Archivo "${filename}" guardado en Drive.`);
+                        } else {
+                            alert("❌ Error: " + data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert("⚠️ Enviado. Verifica tu Drive.");
+                    })
+                    .finally(() => {
+                        btn.textContent = originalText;
+                        btn.disabled = false;
+                    });
                 });
-            });
+            }, 500); // Esperar 500ms
         }
 
         function numeroALetras(num) {
