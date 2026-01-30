@@ -23,6 +23,14 @@
             align-items: center;
         }
 
+        /* Contenedor principal para facilitar la impresión PDF */
+        #contenedor-hojas {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+        }
+
         .page {
             width: 210mm;
             height: 297mm;
@@ -262,6 +270,7 @@
                 -webkit-print-color-adjust: exact; 
                 print-color-adjust: exact;
             }
+            #contenedor-hojas { width: 100%; }
             .page { 
                 width: 210mm; 
                 height: 297mm; 
@@ -277,6 +286,7 @@
                 background: transparent !important;
             }
 
+            /* Forzar visualización al imprimir */
             .page-vale.show { display: flex !important; }
             .page-guia { display: flex !important; }
             .page-guia.hide { display: flex !important; }
@@ -309,249 +319,253 @@
         <button class="action-btn btn-drive" id="btnDrive">☁️ Guardar en Drive</button>
     </div>
 
-    <!-- PÁGINA GUÍA -->
-    <div class="page page-guia">
-        <div class="header-top">
-            <div class="organismo">
-                <img src="membrete_provincia.png" alt="Membrete Provincia de Corrientes">
-            </div>
-            
-            <div class="header-right-group">
-                <div class="original-mark">ORIGINAL</div>
-                <div class="serie-box">
-                    SERIE D - 
-                    <input type="text" id="guiaNumero" class="guia-roja" readonly value="Cargando...">
-                    
-                </div>
-            </div>
-        </div>
-
-        <div class="main-title">GUIA DE REMOVIDO DE PRODUCTOS FORESTALES</div>
-        <div class="sub-title">LEY PROVINCIAL Nº 5.175 - DECRETO Nº 1.014/2.001</div>
-
-        <div class="form-line">
-            <label>Departamento:</label> <input type="text" id="origen_dpto" placeholder="...">
-            <label style="margin-left: 20px;">Provincia:</label> <input type="text" id="origen_prov" value="CORRIENTES">
-        </div>
-
-        <div class="form-line">
-            <label>Conste que el Señor:</label> <input type="text" id="transportista">
-            <label>está autorizado para transportar</label>
-        </div>
-
-        <div class="form-line">
-            <label>la partida de productos forestales que se detalla en esta guía, con destino a:</label>
-            <input type="text" id="destino">
-            <label>siendo</label>
-        </div>
-
-        <div class="form-line">
-            <label>su consignatario el señor</label> <input type="text" id="consignatario">
-        </div>
-
-        <table id="productsTable">
-            <thead>
-                <tr>
-                    <th style="width: 15%;">Número de Piezas</th>
-                    <th style="width: 25%;">Clase de Producto</th>
-                    <th style="width: 15%;">Estado</th>
-                    <th style="width: 20%;">Especie</th>
-                    <th style="width: 12%;">Cantidad</th>
-                    <th style="width: 13%;">Unidad</th>
-                    <th class="no-print" style="width: 20px;"></th>
-                </tr>
-            </thead>
-            <tbody id="tableBody">
-            </tbody>
-            <tfoot>
-                <tr class="totals-row">
-                    <td colspan="4" style="text-align: right; padding-right: 10px;">TOTAL</td>
-                    <td><input type="text" id="grandTotal" readonly value="0"></td>
-                    <td></td>
-                    <td class="no-print"></td>
-                </tr>
-            </tfoot>
-        </table>
+    <!-- WRAPPER PRINCIPAL -->
+    <div id="contenedor-hojas">
         
-        <div class="add-row-container no-print">
-            <button class="btn-add" id="btnAddRow">+ Agregar Fila</button>
-        </div>
-
-        <div class="form-line son-section">
-            <label>SON:</label> <input type="text" id="sonLetras" readonly placeholder="(Cantidad total en letras)">
-        </div>
-
-        <div class="form-line" style="margin-top: 15px;">
-            <label>(2) Estos productos se encuentran depositados en:</label> <input type="text">
-        </div>
-
-        <div class="form-line">
-            <label>y corresponden a la</label>
-            <label>guía</label> <input type="text" style="width: 80px;">
-            <label>de la</label> <label>Serie</label> <input type="text" style="width: 50px;">
-            <label>Nº</label> <input type="text" style="width: 100px;">
-            <label>Cantidad</label> <input type="text" style="width: 50px;">
-            <label>Nº</label> <input type="text" style="width: 50px;">
-        </div>
-        
-        <div class="form-line">
-            <label style="opacity: 0;">Espacio</label>
-            <label>Nº</label> <input type="text" style="width: 100px;">
-            <label>,</label> <label>Cantidad</label> <input type="text" style="width: 80px;">
-            <label>Nº</label> <input type="text" style="width: 100px;">
-            <label>Cantidad</label> <input type="text" style="width: 50px;">
-            <label>Nº</label> <input type="text" style="width: 50px;">
-        </div>
-
-        <div class="form-line">
-            <label>las que están consignadas a nombre del titular de la presente guía (3) que vence el día</label>
-            <input type="text" id="venc_dia" style="width: 40px;"> <label>de</label> 
-            <input type="text" id="venc_mes" style="width: 100px;"> <label>20</label> 
-            <input type="text" id="venc_anio" style="width: 40px;">
-        </div>
-
-        <div class="observaciones">
-            OBSERVACIONES: <input type="text" id="obsInput1" style="font-weight: normal;">
-            <input type="text" style="font-weight: normal; margin-top: 5px;">
-        </div>
-
-        <div class="date-place">
-            <input type="text" id="lugar_emision" style="width: 150px; text-align: right;" value="Corrientes">, de 
-            <input type="text" id="fecha_dia" style="width: 30px;"> de 
-            <input type="text" id="fecha_mes" style="width: 100px;"> 20 
-            <input type="text" id="fecha_anio" style="width: 40px;"><br>
-        </div>
-        <div style="text-align: right; font-size: 8pt; margin-right: 50px; margin-top: -5px;">Lugar y Fecha</div>
-
-        <div class="footer-signatures">
-            <div class="signature-box">
-                <br><br>
-                <div class="signature-line">
-                    Firma del Titular de la guía
-                    <div style="margin-top: 5px; text-align: left;">Nombre y apellido aclarado</div>
+        <!-- PÁGINA GUÍA -->
+        <div class="page page-guia">
+            <div class="header-top">
+                <div class="organismo">
+                    <img src="membrete_provincia.png" alt="Membrete Provincia de Corrientes">
                 </div>
-            </div>
-            <div class="signature-box">
-                <div class="employee-data" id="employeeDataContainer"></div>
-                <!-- FIRMA GUIA: 150px -->
-                <img id="firmaGuia" class="firma-img" src="" alt="Firma">
                 
-                <div class="signature-line">
-                    Firma del Empleado Forestal
-                    <div style="margin-top: 5px; text-align: left;">Categoría, nombre y apellido</div>
-                </div>
-                <div id="qrcode-container">
-                    <img id="qrcode-img" src="" alt="QR">
-                    <div style="font-size: 6pt; margin-top:2px;">ESCANEAR PARA VERIFICAR</div>
+                <div class="header-right-group">
+                    <div class="original-mark">ORIGINAL</div>
+                    <div class="serie-box">
+                        SERIE D - 
+                        <input type="text" id="guiaNumero" class="guia-roja" readonly value="Cargando...">
+                        
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <div class="notes">
-            (1) Táchese lo que no corresponda.<br>
-            (2) Indíquese la cantidad descontada en cada guía de origen.<br>
-            (3) No apta para transporte por ferrocarril.<br>
-            NOTA: Aclárese el medio de transporte: carro, patente; camión, número; embarcación, nombre o número.
-            <div style="text-align: right; margin-top: 5px; font-style: italic;">(ORIGINAL)</div>
-        </div>
-    </div>
+            <div class="main-title">GUIA DE REMOVIDO DE PRODUCTOS FORESTALES</div>
+            <div class="sub-title">LEY PROVINCIAL Nº 5.175 - DECRETO Nº 1.014/2.001</div>
 
-    <!-- PÁGINA VALE -->
-    <div class="page page-vale">
-        <div class="header-top">
-            <div class="organismo">
-                <img src="membrete_provincia.png" alt="Membrete Provincia de Corrientes">
+            <div class="form-line">
+                <label>Departamento:</label> <input type="text" id="origen_dpto" placeholder="...">
+                <label style="margin-left: 20px;">Provincia:</label> <input type="text" id="origen_prov" value="CORRIENTES">
+            </div>
+
+            <div class="form-line">
+                <label>Conste que el Señor:</label> <input type="text" id="transportista">
+                <label>está autorizado para transportar</label>
+            </div>
+
+            <div class="form-line">
+                <label>la partida de productos forestales que se detalla en esta guía, con destino a:</label>
+                <input type="text" id="destino">
+                <label>siendo</label>
+            </div>
+
+            <div class="form-line">
+                <label>su consignatario el señor</label> <input type="text" id="consignatario">
+            </div>
+
+            <table id="productsTable">
+                <thead>
+                    <tr>
+                        <th style="width: 15%;">Número de Piezas</th>
+                        <th style="width: 25%;">Clase de Producto</th>
+                        <th style="width: 15%;">Estado</th>
+                        <th style="width: 20%;">Especie</th>
+                        <th style="width: 12%;">Cantidad</th>
+                        <th style="width: 13%;">Unidad</th>
+                        <th class="no-print" style="width: 20px;"></th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                </tbody>
+                <tfoot>
+                    <tr class="totals-row">
+                        <td colspan="4" style="text-align: right; padding-right: 10px;">TOTAL</td>
+                        <td><input type="text" id="grandTotal" readonly value="0"></td>
+                        <td></td>
+                        <td class="no-print"></td>
+                    </tr>
+                </tfoot>
+            </table>
+            
+            <div class="add-row-container no-print">
+                <button class="btn-add" id="btnAddRow">+ Agregar Fila</button>
+            </div>
+
+            <div class="form-line son-section">
+                <label>SON:</label> <input type="text" id="sonLetras" readonly placeholder="(Cantidad total en letras)">
+            </div>
+
+            <div class="form-line" style="margin-top: 15px;">
+                <label>(2) Estos productos se encuentran depositados en:</label> <input type="text">
+            </div>
+
+            <div class="form-line">
+                <label>y corresponden a la</label>
+                <label>guía</label> <input type="text" style="width: 80px;">
+                <label>de la</label> <label>Serie</label> <input type="text" style="width: 50px;">
+                <label>Nº</label> <input type="text" style="width: 100px;">
+                <label>Cantidad</label> <input type="text" style="width: 50px;">
+                <label>Nº</label> <input type="text" style="width: 50px;">
             </div>
             
-            <div class="header-right-group">
-                <div class="original-mark">ORIGINAL</div>
-                <div class="serie-box" style="font-size: 14pt;">
-                    Nº <input type="text" id="valeNumero" class="guia-roja" readonly style="color: red; font-size: 16pt;">
+            <div class="form-line">
+                <label style="opacity: 0;">Espacio</label>
+                <label>Nº</label> <input type="text" style="width: 100px;">
+                <label>,</label> <label>Cantidad</label> <input type="text" style="width: 80px;">
+                <label>Nº</label> <input type="text" style="width: 100px;">
+                <label>Cantidad</label> <input type="text" style="width: 50px;">
+                <label>Nº</label> <input type="text" style="width: 50px;">
+            </div>
+
+            <div class="form-line">
+                <label>las que están consignadas a nombre del titular de la presente guía (3) que vence el día</label>
+                <input type="text" id="venc_dia" style="width: 40px;"> <label>de</label> 
+                <input type="text" id="venc_mes" style="width: 100px;"> <label>20</label> 
+                <input type="text" id="venc_anio" style="width: 40px;">
+            </div>
+
+            <div class="observaciones">
+                OBSERVACIONES: <input type="text" id="obsInput1" style="font-weight: normal;">
+                <input type="text" style="font-weight: normal; margin-top: 5px;">
+            </div>
+
+            <div class="date-place">
+                <input type="text" id="lugar_emision" style="width: 150px; text-align: right;" value="Corrientes">, de 
+                <input type="text" id="fecha_dia" style="width: 30px;"> de 
+                <input type="text" id="fecha_mes" style="width: 100px;"> 20 
+                <input type="text" id="fecha_anio" style="width: 40px;"><br>
+            </div>
+            <div style="text-align: right; font-size: 8pt; margin-right: 50px; margin-top: -5px;">Lugar y Fecha</div>
+
+            <div class="footer-signatures">
+                <div class="signature-box">
+                    <br><br>
+                    <div class="signature-line">
+                        Firma del Titular de la guía
+                        <div style="margin-top: 5px; text-align: left;">Nombre y apellido aclarado</div>
+                    </div>
                 </div>
+                <div class="signature-box">
+                    <div class="employee-data" id="employeeDataContainer"></div>
+                    <!-- FIRMA GUIA: 150px -->
+                    <img id="firmaGuia" class="firma-img" src="" alt="Firma">
+                    
+                    <div class="signature-line">
+                        Firma del Empleado Forestal
+                        <div style="margin-top: 5px; text-align: left;">Categoría, nombre y apellido</div>
+                    </div>
+                    <div id="qrcode-container">
+                        <img id="qrcode-img" src="" alt="QR">
+                        <div style="font-size: 6pt; margin-top:2px;">ESCANEAR PARA VERIFICAR</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="notes">
+                (1) Táchese lo que no corresponda.<br>
+                (2) Indíquese la cantidad descontada en cada guía de origen.<br>
+                (3) No apta para transporte por ferrocarril.<br>
+                NOTA: Aclárese el medio de transporte: carro, patente; camión, número; embarcación, nombre o número.
+                <div style="text-align: right; margin-top: 5px; font-style: italic;">(ORIGINAL)</div>
             </div>
         </div>
 
-        <div class="vale-tipo-selector no-print">
-            <label>
-                <input type="radio" name="vale-tipo" value="fuera" checked id="radioFuera">
-                FUERA DE LA PROVINCIA
-            </label>
-            <label>
-                <input type="radio" name="vale-tipo" value="dentro" id="radioDentro">
-                DENTRO DE LA PROVINCIA
-            </label>
-        </div>
-
-        <div class="main-title" id="vale-titulo">VALE PARA EL TRANSPORTE DE PRODUCTOS FORESTALES<br>FUERA DE LA PROVINCIA</div>
-
-        <div class="form-line" style="margin-top: 30px;">
-            <label>Conste que el señor</label>
-            <input type="text" id="vale_transportista" placeholder="...">
-        </div>
-
-        <div class="form-line">
-            <label>está autorizado para transportar en su</label>
-            <input type="text" id="vale_vehiculo" placeholder="tipo de vehículo" style="width: 140px;">
-            <label>Nº patente</label>
-            <input type="text" id="vale_patente" style="flex: 1;">
-        </div>
-
-        <div class="form-line">
-            <label>hasta la cantidad de:</label>
-            <span id="vale_productos_detalle" style="font-weight: bold; margin-left: 5px;"></span>
-        </div>
-
-        <div class="form-line">
-            <label>en estado</label>
-            <input type="text" id="vale_estado" style="width: 150px;">
-            <label>con destino a</label>
-            <input type="text" id="vale_destino" placeholder="...">
-        </div>
-
-        <div class="form-line">
-            <label>correspondiente a la Guía Nº</label>
-            <input type="text" id="vale_guia_num" style="width: 120px;">
-            <label>Serie</label>
-            <input type="text" id="vale_serie" style="width: 60px;">
-        </div>
-
-        <div class="form-line">
-            <label>otorgada a favor de</label>
-            <input type="text" id="vale_beneficiario" placeholder="...">
-        </div>
-
-        <div class="form-line">
-            <label>y que vence el</label>
-            <input type="text" id="vale_venc" style="width: 200px;">
-        </div>
-
-        <div class="date-place" style="margin-top: 80px;">
-            <input type="text" id="vale_lugar" style="width: 150px; text-align: right;">, de 
-            <input type="text" id="vale_dia" style="width: 30px;"> de 
-            <input type="text" id="vale_mes" style="width: 100px;"> 
-            20 <input type="text" id="vale_anio" style="width: 40px;"><br>
-        </div>
-
-        <div class="footer-signatures" style="margin-top: 80px;">
-            <div class="signature-box">
-                <div class="signature-line">
-                    Firma del Camionero
+        <!-- PÁGINA VALE -->
+        <div class="page page-vale">
+            <div class="header-top">
+                <div class="organismo">
+                    <img src="membrete_provincia.png" alt="Membrete Provincia de Corrientes">
+                </div>
+                
+                <div class="header-right-group">
+                    <div class="original-mark">ORIGINAL</div>
+                    <div class="serie-box" style="font-size: 14pt;">
+                        Nº <input type="text" id="valeNumero" class="guia-roja" readonly style="color: red; font-size: 16pt;">
+                    </div>
                 </div>
             </div>
-            <div class="signature-box">
-                <div class="employee-data" id="employeeDataContainer2"></div>
-                <!-- FIRMA VALE: Se mantiene con la posición original -->
-                <img id="firmaVale" class="firma-img" src="" alt="Firma">
-                <div class="signature-line">
-                    Firma del Empleado Forestal
+
+            <div class="vale-tipo-selector no-print">
+                <label>
+                    <input type="radio" name="vale-tipo" value="fuera" checked id="radioFuera">
+                    FUERA DE LA PROVINCIA
+                </label>
+                <label>
+                    <input type="radio" name="vale-tipo" value="dentro" id="radioDentro">
+                    DENTRO DE LA PROVINCIA
+                </label>
+            </div>
+
+            <div class="main-title" id="vale-titulo">VALE PARA EL TRANSPORTE DE PRODUCTOS FORESTALES<br>FUERA DE LA PROVINCIA</div>
+
+            <div class="form-line" style="margin-top: 30px;">
+                <label>Conste que el señor</label>
+                <input type="text" id="vale_transportista" placeholder="...">
+            </div>
+
+            <div class="form-line">
+                <label>está autorizado para transportar en su</label>
+                <input type="text" id="vale_vehiculo" placeholder="tipo de vehículo" style="width: 140px;">
+                <label>Nº patente</label>
+                <input type="text" id="vale_patente" style="flex: 1;">
+            </div>
+
+            <div class="form-line">
+                <label>hasta la cantidad de:</label>
+                <span id="vale_productos_detalle" style="font-weight: bold; margin-left: 5px;"></span>
+            </div>
+
+            <div class="form-line">
+                <label>en estado</label>
+                <input type="text" id="vale_estado" style="width: 150px;">
+                <label>con destino a</label>
+                <input type="text" id="vale_destino" placeholder="...">
+            </div>
+
+            <div class="form-line">
+                <label>correspondiente a la Guía Nº</label>
+                <input type="text" id="vale_guia_num" style="width: 120px;">
+                <label>Serie</label>
+                <input type="text" id="vale_serie" style="width: 60px;">
+            </div>
+
+            <div class="form-line">
+                <label>otorgada a favor de</label>
+                <input type="text" id="vale_beneficiario" placeholder="...">
+            </div>
+
+            <div class="form-line">
+                <label>y que vence el</label>
+                <input type="text" id="vale_venc" style="width: 200px;">
+            </div>
+
+            <div class="date-place" style="margin-top: 80px;">
+                <input type="text" id="vale_lugar" style="width: 150px; text-align: right;">, de 
+                <input type="text" id="vale_dia" style="width: 30px;"> de 
+                <input type="text" id="vale_mes" style="width: 100px;"> 
+                20 <input type="text" id="vale_anio" style="width: 40px;"><br>
+            </div>
+
+            <div class="footer-signatures" style="margin-top: 80px;">
+                <div class="signature-box">
+                    <div class="signature-line">
+                        Firma del Camionero
+                    </div>
+                </div>
+                <div class="signature-box">
+                    <div class="employee-data" id="employeeDataContainer2"></div>
+                    <!-- FIRMA VALE: Se mantiene con la posición original -->
+                    <img id="firmaVale" class="firma-img" src="" alt="Firma">
+                    <div class="signature-line">
+                        Firma del Empleado Forestal
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <div class="notes">
-            NOTA: En caso de extravío del presente vale, deberá darse cuenta a la autoridad forestal; de lo contrario será responsable de cualquier maniobra que se pretendiera efectuar en el mismo la persona a cuya orden se ha otorgado.
+            <div class="notes">
+                NOTA: En caso de extravío del presente vale, deberá darse cuenta a la autoridad forestal; de lo contrario será responsable de cualquier maniobra que se pretendiera efectuar en el mismo la persona a cuya orden se ha otorgado.
+            </div>
         </div>
-    </div>
+    </div> <!-- FIN CONTENEDOR HOJAS -->
 
     <script>
         // --- PEGA AQUI LA URL DE TU SCRIPT DE GOOGLE QUE COPIASTE ANTES ---
@@ -850,72 +864,33 @@
             XLSX.writeFile(wb, `Guia_${header["Guía Nº"]}.xlsx`);
         }
 
-        // --- FUNCION CORREGIDA PARA SOLUCIONAR EL PDF EN BLANCO ---
+        // --- SOLUCIÓN SÓLIDA: MANIPULACIÓN DE VISTA REAL ---
         function guardarEnDrive() {
             const btn = document.getElementById('btnDrive');
             const originalText = btn.textContent;
             btn.textContent = "⏳ Generando PDF completo...";
             btn.disabled = true;
 
-            // 1. FORZAR SCROLL ARRIBA: Crucial para que html2canvas no genere blanco
-            window.scrollTo(0, 0);
+            // 1. OBTENER REFERENCIAS Y ESTADO ACTUAL
+            const guia = document.querySelector('.page-guia');
+            const vale = document.querySelector('.page-vale');
+            const contenedor = document.getElementById('contenedor-hojas');
+            
+            // Guardamos si el vale estaba visible o no para restaurarlo luego
+            const valeEraVisible = vale.classList.contains('show');
 
-            // 2. Crear contenedor temporal VISIBLE sobre todo
-            const container = document.createElement('div');
-            container.style.cssText = `
-                position: absolute; 
-                top: 0; 
-                left: 0; 
-                width: 210mm; 
-                background: white; 
-                z-index: 99999; 
-                padding: 0;
-            `;
-            document.body.appendChild(container);
+            // 2. FORZAR VISIBILIDAD DE AMBOS PARA LA FOTO
+            // Al hacer esto en el DOM real, el navegador renderiza todo correctamente (textos, inputs, etc)
+            guia.classList.remove('hide');
+            guia.style.display = 'flex'; // Asegurar display flex
+            
+            vale.classList.add('show');
+            vale.style.display = 'flex'; // Asegurar display flex
 
-            const guiaOriginal = document.querySelector('.page-guia');
-            const valeOriginal = document.querySelector('.page-vale');
+            // Forzar scroll arriba para evitar cortes
+            window.scrollTo(0,0);
 
-            function clonarPagina(elementoOriginal) {
-                const clone = elementoOriginal.cloneNode(true);
-                clone.style.margin = '0';
-                clone.style.boxShadow = 'none';
-                clone.style.display = 'flex';
-                clone.classList.remove('hide');
-                clone.classList.add('show');
-                clone.style.pageBreakAfter = 'always';
-
-                const inputsOriginales = elementoOriginal.querySelectorAll('input, select, textarea');
-                const inputsClonados = clone.querySelectorAll('input, select, textarea');
-
-                for (let i = 0; i < inputsOriginales.length; i++) {
-                    const orig = inputsOriginales[i];
-                    const clon = inputsClonados[i];
-
-                    if (orig.type === 'checkbox' || orig.type === 'radio') {
-                        clon.checked = orig.checked;
-                        if(orig.checked) clon.setAttribute('checked', 'checked');
-                    } else if (orig.tagName === 'SELECT') {
-                        clon.value = orig.value;
-                        const options = clon.querySelectorAll('option');
-                        options.forEach(opt => {
-                            if(opt.value === orig.value) opt.setAttribute('selected', 'selected');
-                        });
-                    } else {
-                        clon.value = orig.value;
-                        clon.setAttribute('value', orig.value);
-                    }
-                }
-                return clone;
-            }
-
-            const guiaClone = clonarPagina(guiaOriginal);
-            const valeClone = clonarPagina(valeOriginal);
-            valeClone.style.pageBreakAfter = 'avoid';
-
-            container.appendChild(guiaClone);
-            container.appendChild(valeClone);
-
+            // 3. CONFIGURACIÓN DEL PDF
             const numGuia = document.getElementById('guiaNumero').value || "S_N";
             const filename = `GUIA_Y_VALE_${numGuia}.pdf`;
 
@@ -923,51 +898,58 @@
                 margin:       0,
                 filename:     filename,
                 image:        { type: 'jpeg', quality: 0.98 },
-                // Configuración vital para evitar el blanco: scrollY: 0
-                html2canvas:  { scale: 2, logging: false, scrollY: 0, windowWidth: document.body.scrollWidth },
+                html2canvas:  { scale: 2, logging: false, scrollY: 0 },
                 jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
             };
 
-            // 3. Pequeño retardo para asegurar que el navegador pintó el contenedor
-            setTimeout(() => {
-                html2pdf().set(opt).from(container).outputPdf('datauristring').then(function(pdfAsString) {
-                    
-                    document.body.removeChild(container); // Limpiar
+            // 4. GENERAR PDF DEL CONTENEDOR (QUE AHORA TIENE TODO VISIBLE)
+            html2pdf().set(opt).from(contenedor).outputPdf('datauristring').then(function(pdfAsString) {
+                
+                // 5. RESTAURAR LA VISTA ORIGINAL INMEDIATAMENTE
+                if (!valeEraVisible) {
+                    vale.classList.remove('show');
+                    vale.style.display = 'none'; // Ocultar vale
+                    guia.classList.remove('hide'); // Mostrar guia
+                } else {
+                    // Si el vale estaba visible, ocultamos la guia
+                    guia.classList.add('hide'); 
+                    guia.style.display = 'none';
+                }
 
-                    const payload = {
-                        filename: filename,
-                        fileContent: pdfAsString
-                    };
+                // 6. ENVIAR A DRIVE
+                const payload = {
+                    filename: filename,
+                    fileContent: pdfAsString
+                };
 
-                    if(GOOGLE_SCRIPT_URL.includes("AKfycbxpJzHne2l3gdDa0y4F2B4COXOWOcjWVTrRW")) {
-                         alert("⚠️ Error: Configura tu URL del Script de Google.");
-                         btn.textContent = originalText;
-                         btn.disabled = false;
-                         return;
+                if(GOOGLE_SCRIPT_URL.includes("AKfycbxpJzHne2l3gdDa0y4F2B4COXOWOcjWVTrRW")) {
+                     alert("⚠️ Error: Configura tu URL del Script de Google.");
+                     btn.textContent = originalText;
+                     btn.disabled = false;
+                     return;
+                }
+
+                fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if(data.status === 'success') {
+                        alert(`✅ Archivo "${filename}" guardado en Drive.`);
+                    } else {
+                        alert("❌ Error: " + data.message);
                     }
-
-                    fetch(GOOGLE_SCRIPT_URL, {
-                        method: 'POST',
-                        body: JSON.stringify(payload)
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if(data.status === 'success') {
-                            alert(`✅ Archivo "${filename}" guardado en Drive.`);
-                        } else {
-                            alert("❌ Error: " + data.message);
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        alert("⚠️ Enviado. Verifica tu Drive.");
-                    })
-                    .finally(() => {
-                        btn.textContent = originalText;
-                        btn.disabled = false;
-                    });
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert("⚠️ Enviado. Verifica tu Drive.");
+                })
+                .finally(() => {
+                    btn.textContent = originalText;
+                    btn.disabled = false;
                 });
-            }, 500); // Esperar 500ms
+            });
         }
 
         function numeroALetras(num) {
