@@ -3,9 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Guía de Removido</title> <!-- Título por defecto -->
-    <!-- Librería Excel -->
+    <title>Guía de Removido</title>
+    
+    <!-- Librerías: Excel y HTML2PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Times+New+Roman&display=swap');
@@ -162,7 +164,6 @@
             margin-bottom: 5px;
         }
 
-        /* ESTILOS DE FIRMAS */
         .firma-img {
             display: none; 
             height: 120px; 
@@ -175,15 +176,8 @@
             mix-blend-mode: multiply;
         }
 
-        /* FIRMA VALE */
-        #firmaVale {
-            bottom: 25px; 
-        }
-
-        /* FIRMA GUIA */
-        #firmaGuia {
-            bottom: 150px; 
-        }
+        #firmaVale { bottom: 25px; }
+        #firmaGuia { bottom: 150px; }
 
         #employeeDataContainer2 {
             font-family: 'Courier New', Courier, monospace; font-size: 9pt; font-weight: bold;
@@ -212,22 +206,9 @@
             margin-bottom: 15px;
             font-size: 10pt;
         }
-
-        .vale-tipo-selector label {
-            margin-right: 20px;
-            font-weight: bold;
-        }
-
-        .vale-tipo-selector input[type="radio"] {
-            width: auto;
-            margin-right: 5px;
-        }
-
-        #vale_productos_detalle {
-            font-size: 10pt; 
-            line-height: 1.4;
-            display: inline;
-        }
+        .vale-tipo-selector label { margin-right: 20px; font-weight: bold; }
+        .vale-tipo-selector input[type="radio"] { width: auto; margin-right: 5px; }
+        #vale_productos_detalle { font-size: 10pt; line-height: 1.4; display: inline; }
 
         .sidebar {
             position: fixed; 
@@ -251,6 +232,7 @@
         .btn-qr { background-color: #e65100; }
         .btn-new { background-color: #444; border: 1px solid #777; }
         .btn-vale { background-color: #7b1fa2; }
+        .btn-drive { background-color: #0f9d58; } /* Color de Drive */
         
         .btn-add { 
             background-color: #333; width: 100%; text-align: center; 
@@ -267,7 +249,6 @@
 
         .page-guia { display: flex; }
         .page-vale { display: none; }
-        
         .page-vale.show { display: flex; }
 
         @media print {
@@ -323,6 +304,8 @@
         <button class="action-btn btn-vale" id="btnVale">📄 Activar Vale</button>
         <button class="action-btn btn-excel" id="btnExcel">📊 Excel</button>
         <button class="action-btn btn-qr" id="btnQR">🔄 Actualizar QR</button>
+        <!-- BOTÓN DE DRIVE -->
+        <button class="action-btn btn-drive" id="btnDrive">☁️ Guardar en Drive</button>
     </div>
 
     <!-- PÁGINA GUÍA -->
@@ -343,7 +326,7 @@
         </div>
 
         <div class="main-title">GUIA DE REMOVIDO DE PRODUCTOS FORESTALES</div>
-        <div class="sub-title">LEY PROVINCIAL Nº 5.175 - DECRETO Nº 1.014/2.001</div>
+        <div class="sub-title">LEY FORESTAL Nº 13.273 (Art. 18)</div>
 
         <div class="form-line">
             <label>Departamento:</label> <input type="text" id="origen_dpto" placeholder="...">
@@ -453,7 +436,7 @@
                 <img id="firmaGuia" class="firma-img" src="" alt="Firma">
                 
                 <div class="signature-line">
-                    Firma del Empleado Forestal
+                    Firma del empleado forestal
                     <div style="margin-top: 5px; text-align: left;">Categoría, nombre y apellido</div>
                 </div>
                 <div id="qrcode-container">
@@ -570,20 +553,23 @@
     </div>
 
     <script>
+        // --- PEGA AQUI LA URL DE TU SCRIPT DE GOOGLE QUE COPIASTE ANTES ---
+        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyhVtiFHcK7fYvqsXREcKRnIhWvypEwoNtkCfrQltdzr3uLI9Hxb6AgjOH07InxD8LV/exec"; 
+
         const users = {
             "sanchez": { 
                 name: "Sánchez Walter Hugo", 
                 dni: "25.229.088", 
                 cel: "3644-409580", 
                 pass: "ws2026x",
-                firma: "firma_Walter.png" // Archivo de firma
+                firma: "firma_Walter.png"
             },
             "serrudo": { 
                 name: "Serrudo Matias Ignacio", 
                 dni: "32.745.638", 
                 cel: "3794-724272", 
                 pass: "ms2026x",
-                firma: "firma_Matias.png" // Archivo de firma
+                firma: "firma_Matias.png"
             },
             "prueba": { 
                 name: "Modo prueba", 
@@ -596,28 +582,23 @@
         let currentUser = null;
 
         async function inicializar() {
-            // 1. INTENTAR CONECTAR CON EL SERVIDOR
             try {
                 const response = await fetch('/api/siguiente-numero');
                 if (!response.ok) throw new Error("Error en servidor");
                 const data = await response.json();
                 
-                // SI FUNCIONA, USA EL NÚMERO DE LA BASE DE DATOS
                 document.getElementById('guiaNumero').value = data.numero;
                 document.getElementById('valeNumero').value = data.numero; 
-                actualizarObservaciones(); // Actualizar el texto con el número recibido
+                actualizarObservaciones(); 
                 
             } catch (error) {
                 console.error("Error obteniendo número:", error);
-                // Si falla la conexión, permitimos edición manual
                 document.getElementById('guiaNumero').value = "ERROR - CARGAR MANUAL";
                 document.getElementById('guiaNumero').removeAttribute('readonly');
                 document.getElementById('guiaNumero').focus();
-                
                 document.getElementById('valeNumero').value = "";
             }
 
-            // 2. FECHAS AUTOMÁTICAS
             const d = new Date();
             document.getElementById('fecha_dia').value = d.getDate();
             const meses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
@@ -629,11 +610,9 @@
             document.getElementById('vale_anio').value = d.getFullYear().toString().substr(-2);
             document.getElementById('vale_lugar').value = "Corrientes";
             
-            // 3. INICIALIZACIÓN
             addRow(); addRow(); addRow();
             updateQRCode();
             
-            // 4. LISTENERS PARA SINCRONIZAR
             document.getElementById('transportista').addEventListener('input', sincronizarDatosVale);
             document.getElementById('destino').addEventListener('input', sincronizarDatosVale);
             document.getElementById('consignatario').addEventListener('input', sincronizarDatosVale);
@@ -641,24 +620,20 @@
                 document.getElementById('valeNumero').value = this.value;
                 sincronizarDatosVale();
                 updateQRCode();
-                actualizarObservaciones(); // Actualizar texto al cambiar numero a mano
+                actualizarObservaciones(); 
             });
         }
 
         function actualizarObservaciones() {
             const num = document.getElementById('guiaNumero').value;
-            // Verificar radio seleccionado
             const tipoRadio = document.querySelector('input[name="vale-tipo"]:checked').value;
             let tipoTexto = "FUERA DE LA PROVINCIA";
             if (tipoRadio === 'dentro') {
                 tipoTexto = "DENTRO DE LA PROVINCIA";
             }
-
             const textoFinal = `SE EXTIENDE UN VALE DE TRANSPORTE ${tipoTexto} Nº ${num}`;
             document.getElementById('obsInput1').value = textoFinal;
-
-            // ACTUALIZAR TITULO DEL DOCUMENTO (Nombre del archivo al imprimir PDF)
-            document.title = "Corrientes-Guía de Removido de Productos Forestales Nº " + num;
+            document.title = "Guía de Removidos Nº " + num;
         }
 
         function desbloquearNumero() {
@@ -686,14 +661,11 @@
                 document.getElementById('employeeDataContainer').innerText = info;
                 document.getElementById('employeeDataContainer2').innerText = info;
                 
-                // LÓGICA DE FIRMAS (Para Guía y Vale)
                 if (currentUser.firma) {
                     const firmaGuia = document.getElementById('firmaGuia');
                     const firmaVale = document.getElementById('firmaVale');
-                    
                     firmaGuia.src = currentUser.firma;
                     firmaGuia.style.display = 'block';
-                    
                     firmaVale.src = currentUser.firma;
                     firmaVale.style.display = 'block';
                 }
@@ -710,9 +682,7 @@
             const valeDiv = document.querySelector('.page-vale');
             const guiaDiv = document.querySelector('.page-guia');
             const btn = document.getElementById('btnVale');
-            
             calculateTotal(); 
-
             if(valeDiv.classList.contains('show')) {
                 valeDiv.classList.remove('show');
                 guiaDiv.classList.remove('hide');
@@ -736,33 +706,27 @@
 
             const rows = document.querySelectorAll('#productsTable tbody tr');
             let productosTexto = "";
-            
             rows.forEach(row => {
                 const clase = row.querySelector('.inp-clase').value.trim();
                 const especie = row.querySelector('.inp-especie').value.trim();
                 const cant = parseFloat(row.querySelector('.inp-cant').value) || 0;
                 const uni = row.querySelector('.inp-uni').value;
-
                 if (cant > 0 && clase && especie) {
                     let unidadTexto = uni;
                     if(uni === 'Tn') unidadTexto = 'TONELADAS';
                     if(uni === 'm3') unidadTexto = 'METROS CÚBICOS';
                     if(uni === 'Unid') unidadTexto = 'UNIDADES';
                     if(uni === 'Kg') unidadTexto = 'KILOGRAMOS';
-
                     const cantEntera = Math.floor(cant);
                     const decimales = Math.round((cant % 1) * 100);
                     const textoLetras = numeroALetras(cantEntera);
-                    
                     let cantidadCompleta = `${cant} (${textoLetras} ${unidadTexto}`;
                     if(decimales > 0) cantidadCompleta += ` CON ${decimales}/100`;
                     cantidadCompleta += ')';
-
                     if(productosTexto !== "") productosTexto += " - ";
                     productosTexto += `${cantidadCompleta} de ${clase} de ${especie}`;
                 }
             });
-
             const detalleDiv = document.getElementById('vale_productos_detalle');
             if(productosTexto) {
                 detalleDiv.textContent = productosTexto;
@@ -779,43 +743,36 @@
             } else {
                 titulo.innerHTML = 'VALE PARA EL TRANSPORTE DE PRODUCTOS FORESTALES<br>DENTRO DE LA PROVINCIA';
             }
-            actualizarObservaciones(); // Actualizar texto de observaciones también
+            actualizarObservaciones(); 
         }
 
         function updateQRCode() {
             const el = (id) => document.getElementById(id) ? document.getElementById(id).value : "";
-            
             let texto = `GUÍA: ${el('guiaNumero')}\n`;
             texto += `VENCE: ${el('venc_dia')}/${el('venc_mes')}/20${el('venc_anio')}\n`;
             texto += `--- PRODUCTOS ---\n`;
-            
             const rows = document.querySelectorAll('#productsTable tbody tr');
             let hasProd = false;
-            
             rows.forEach(row => {
                 const especie = row.querySelector('.inp-especie').value;
                 const clase = row.querySelector('.inp-clase').value;
                 const cant = row.querySelector('.inp-cant').value;
                 const uni = row.querySelector('.inp-uni').value;
-
                 if(especie || clase || cant) {
                     texto += `> ${especie || '?'} (${clase || '?'}): ${cant || '0'} ${uni}\n`;
                     hasProd = true;
                 }
             });
-
             if(!hasProd) texto += `(Sin productos cargados)\n`;
             texto += `TOTAL: ${el('grandTotal')}\n`;
-            texto += `--- Empleado Forestal ---\n`;
+            texto += `--- EMPLEADO ---\n`;
             if(currentUser) {
                 texto += `Nombre: ${currentUser.name}\nTel: ${currentUser.cel}`;
             } else {
                 texto += `No identificado`;
             }
-
             const urlData = encodeURIComponent(texto);
             const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${urlData}`;
-            
             const img = document.getElementById('qrcode-img');
             img.src = qrUrl;
             img.style.display = 'block';
@@ -856,14 +813,12 @@
             const inputs = document.querySelectorAll('.inp-cant');
             inputs.forEach(inp => total += parseFloat(inp.value) || 0);
             document.getElementById('grandTotal').value = total.toFixed(2);
-            
             const totalEntero = Math.floor(total);
             const totalDecimales = Math.round((total % 1) * 100);
             let textoSon = numeroALetras(totalEntero);
             if(totalDecimales > 0) textoSon += ` CON ${totalDecimales}/100`;
             textoSon += ' de productos que se detallan en la tabla';
             document.getElementById('sonLetras').value = textoSon;
-            
             updateQRCode();
             sincronizarDatosVale();
         }
@@ -878,11 +833,9 @@
                 "Total General": document.getElementById('grandTotal').value,
                 "Empleado": currentUser ? currentUser.name : "N/A"
             };
-
             let data = [];
             const rows = document.querySelectorAll('#productsTable tbody tr');
             let hasProd = false;
-
             rows.forEach(row => {
                 const p = row.querySelector('.inp-piezas').value;
                 const c = row.querySelector('.inp-clase').value;
@@ -897,13 +850,67 @@
                     });
                 }
             });
-
             if(!hasProd) data.push({...header, "Estado": "Sin productos"});
-            
             const wb = XLSX.utils.book_new();
             const ws = XLSX.utils.json_to_sheet(data);
             XLSX.utils.book_append_sheet(wb, ws, "Guia Forestal");
             XLSX.writeFile(wb, `Guia_${header["Guía Nº"]}.xlsx`);
+        }
+
+        function guardarEnDrive() {
+            const btn = document.getElementById('btnDrive');
+            const originalText = btn.textContent;
+            btn.textContent = "⏳ Generando y subiendo...";
+            btn.disabled = true;
+
+            const valeVisible = document.querySelector('.page-vale').classList.contains('show');
+            const elementoAImprimir = valeVisible ? document.querySelector('.page-vale') : document.querySelector('.page-guia');
+            const numGuia = document.getElementById('guiaNumero').value;
+            const tipoDoc = valeVisible ? "VALE" : "GUIA";
+            const filename = `${tipoDoc}_${numGuia}.pdf`;
+
+            const opt = {
+                margin:       0,
+                filename:     filename,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, logging: false },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            html2pdf().set(opt).from(elementoAImprimir).outputPdf('datauristring').then(function(pdfAsString) {
+                const payload = {
+                    filename: filename,
+                    fileContent: pdfAsString
+                };
+
+                if(GOOGLE_SCRIPT_URL === "PEGAR_AQUI_LA_URL_DEL_SCRIPT_DE_GOOGLE") {
+                    alert("⚠️ Error: No has configurado la URL del Script de Google en el código HTML.");
+                    btn.textContent = originalText;
+                    btn.disabled = false;
+                    return;
+                }
+
+                fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if(data.status === 'success') {
+                        alert("✅ Archivo guardado correctamente en Google Drive.");
+                    } else {
+                        alert("❌ Error en Google: " + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert("⚠️ Se envió la solicitud. Verifica en tu carpeta de Drive si apareció el archivo.");
+                })
+                .finally(() => {
+                    btn.textContent = originalText;
+                    btn.disabled = false;
+                });
+            });
         }
 
         function numeroALetras(num) {
@@ -913,21 +920,17 @@
             const diez_y = ["DIEZ", "ONCE", "DOCE", "TRECE", "CATORCE", "QUINCE", "DIECISEIS", "DIECISIETE", "DIECIOCHO", "DIECINUEVE"];
             const veinti = ["VEINTE", "VEINTIUN", "VEINTIDOS", "VEINTITRES", "VEINTICUATRO", "VEINTICINCO", "VEINTISEIS", "VEINTISIETE", "VEINTIOCHO", "VEINTINUEVE"];
             const centenas = ["", "CIENTO", "DOSCIENTOS", "TRESCIENTOS", "CUATROCIENTOS", "QUINIENTOS", "SEISCIENTOS", "SETECIENTOS", "OCHOCIENTOS", "NOVECIENTOS"];
-
             let texto = "";
-
             if (num >= 1000) {
                 let miles = Math.floor(num / 1000);
                 texto += (miles === 1 ? "MIL" : numeroALetras(miles) + " MIL") + " ";
                 num = num % 1000;
             }
-
             if (num >= 100) {
                 if (num === 100) return texto + "CIEN";
                 texto += centenas[Math.floor(num / 100)] + " ";
                 num = num % 100;
             }
-
             if (num >= 30) {
                 let d = Math.floor(num / 10);
                 let u = num % 10;
@@ -940,7 +943,6 @@
             } else if (num > 0) {
                 texto += unidades[num];
             }
-
             return texto.trim();
         }
 
@@ -954,6 +956,7 @@
         document.getElementById('btnExcel').addEventListener('click', exportToExcel);
         document.getElementById('btnQR').addEventListener('click', updateQRCode);
         document.getElementById('btnAddRow').addEventListener('click', addRow);
+        document.getElementById('btnDrive').addEventListener('click', guardarEnDrive);
         document.getElementById('radioFuera').addEventListener('change', updateValeTitulo);
         document.getElementById('radioDentro').addEventListener('change', updateValeTitulo);
 
@@ -962,3 +965,4 @@
     </script>
 </body>
 </html>
+            
