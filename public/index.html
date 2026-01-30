@@ -247,6 +247,8 @@
         .login-box input, .login-box select { width: 90%; margin-bottom: 10px; padding: 8px; border: 1px solid #ccc; }
         .login-btn { background-color: #1976d2; color: white; padding: 10px; width: 100%; border: none; cursor: pointer; }
 
+        .login-error { color:red; display:none; margin-top:5px; font-size:12px; }
+
         .page-guia { display: flex; }
         .page-vale { display: none; }
         .page-vale.show { display: flex; }
@@ -294,7 +296,7 @@
             </select>
             <input type="password" id="passwordInput" placeholder="Contraseña">
             <button class="login-btn" id="btnLogin">Ingresar</button>
-            <div id="loginError" style="color:red; display:none; margin-top:5px; font-size:12px;">Contraseña incorrecta</div>
+            <div id="loginError" class="login-error">Contraseña incorrecta</div>
         </div>
     </div>
 
@@ -304,7 +306,6 @@
         <button class="action-btn btn-vale" id="btnVale">📄 Activar Vale</button>
         <button class="action-btn btn-excel" id="btnExcel">📊 Excel</button>
         <button class="action-btn btn-qr" id="btnQR">🔄 Actualizar QR</button>
-        <!-- BOTÓN DE DRIVE -->
         <button class="action-btn btn-drive" id="btnDrive">☁️ Guardar en Drive</button>
     </div>
 
@@ -636,14 +637,6 @@
             document.title = "Guía de Removidos Nº " + num;
         }
 
-        function desbloquearNumero() {
-            const input = document.getElementById('guiaNumero');
-            input.removeAttribute('readonly');
-            input.focus();
-            input.select();
-            alert("Modo manual activado: Ingrese el número de guía correcto.");
-        }
-
         function intentarLogin() {
             const u = document.getElementById('userSelect').value;
             const p = document.getElementById('passwordInput').value;
@@ -765,7 +758,7 @@
             });
             if(!hasProd) texto += `(Sin productos cargados)\n`;
             texto += `TOTAL: ${el('grandTotal')}\n`;
-            texto += `--- EMPLEADO ---\n`;
+            texto += `--- Empleado Forestal ---\n`;
             if(currentUser) {
                 texto += `Nombre: ${currentUser.name}\nTel: ${currentUser.cel}`;
             } else {
@@ -857,37 +850,94 @@
             XLSX.writeFile(wb, `Guia_${header["Guía Nº"]}.xlsx`);
         }
 
+        // --- FUNCIÓN CORREGIDA PARA GUARDAR EN DRIVE ---
         function guardarEnDrive() {
             const btn = document.getElementById('btnDrive');
             const originalText = btn.textContent;
-            btn.textContent = "⏳ Generando y subiendo...";
+            btn.textContent = "⏳ Generando PDF completo...";
             btn.disabled = true;
 
-            const valeVisible = document.querySelector('.page-vale').classList.contains('show');
-            const elementoAImprimir = valeVisible ? document.querySelector('.page-vale') : document.querySelector('.page-guia');
-            const numGuia = document.getElementById('guiaNumero').value;
-            const tipoDoc = valeVisible ? "VALE" : "GUIA";
-            const filename = `${tipoDoc}_${numGuia}.pdf`;
+            // 1. Obtener elementos originales
+            const guiaOriginal = document.querySelector('.page-guia');
+            const valeOriginal = document.querySelector('.page-vale');
+
+            // 2. Crear un contenedor temporal para el PDF fuera de la vista
+            const container = document.createElement('div');
+            container.style.position = 'absolute';
+            container.style.left = '-9999px';
+            container.style.top = '0';
+            container.style.width = '210mm'; // Ancho A4 exacto
+            document.body.appendChild(container);
+
+            // 3. Función auxiliar para clonar y copiar valores
+            function clonarPagina(elementoOriginal, forzarVisible) {
+                const clone = elementoOriginal.cloneNode(true);
+                
+                // Ajustes de estilo para impresión perfecta (evita hojas en blanco y sombras)
+                clone.style.margin = '0'; 
+                clone.style.boxShadow = 'none';
+                clone.style.display = 'flex'; // Siempre visible (flex) en el PDF
+                clone.classList.remove('hide'); // Asegurar que no tenga clase de oculto
+                
+                // Forzar salto de página después de cada hoja
+                clone.style.pageBreakAfter = 'always';
+
+                // IMPORTANTE: COPIAR VALORES DE LOS INPUTS MANUALMENTE
+                // cloneNode no copia el texto escrito por el usuario en inputs/selects
+                const inputsOriginales = elementoOriginal.querySelectorAll('input, select, textarea');
+                const inputsClonados = clone.querySelectorAll('input, select, textarea');
+
+                for (let i = 0; i < inputsOriginales.length; i++) {
+                    if (inputsOriginales[i].type === 'checkbox' || inputsOriginales[i].type === 'radio') {
+                        inputsClonados[i].checked = inputsOriginales[i].checked;
+                    } else {
+                        inputsClonados[i].value = inputsOriginales[i].value;
+                        inputsClonados[i].setAttribute('value', inputsOriginales[i].value); // Refuerzo para HTML2PDF
+                    }
+                }
+                return clone;
+            }
+
+            // 4. Clonar Guía y Vale
+            const guiaClone = clonarPagina(guiaOriginal);
+            const valeClone = clonarPagina(valeOriginal);
+
+            // Evitar salto de página después de la última hoja (Vale) para no generar hoja 3 en blanco
+            valeClone.style.pageBreakAfter = 'avoid';
+
+            // 5. Agregar al contenedor
+            container.appendChild(guiaClone);
+            container.appendChild(valeClone);
+
+            // Nombre del archivo
+            const numGuia = document.getElementById('guiaNumero').value || "S_N";
+            const filename = `GUIA_Y_VALE_${numGuia}.pdf`;
 
             const opt = {
                 margin:       0,
                 filename:     filename,
                 image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2, logging: false },
+                html2canvas:  { scale: 2, logging: false, scrollY: 0 },
                 jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
             };
 
-            html2pdf().set(opt).from(elementoAImprimir).outputPdf('datauristring').then(function(pdfAsString) {
+            // 6. Generar PDF
+            html2pdf().set(opt).from(container).outputPdf('datauristring').then(function(pdfAsString) {
+                
+                // Limpiar DOM
+                document.body.removeChild(container);
+
                 const payload = {
                     filename: filename,
                     fileContent: pdfAsString
                 };
 
-                if(GOOGLE_SCRIPT_URL === "https://script.google.com/macros/s/AKfycbxpJzHne2l3gdDa0y4F2B4COXOWOcjWVTrRW-mnpR2mBFIuox4Rj2Kvr6YAqF0slyOa/exec") {
-                    alert("⚠️ Error: No has configurado la URL del Script de Google en el código HTML.");
-                    btn.textContent = originalText;
-                    btn.disabled = false;
-                    return;
+                // Verificar si la URL es la correcta
+                if(GOOGLE_SCRIPT_URL.includes("AKfycbxpJzHne2l3gdDa0y4F2B4COXOWOcjWVTrRW")) {
+                     alert("⚠️ Error: Estás usando la URL de ejemplo. Configura tu Script de Google correctamente.");
+                     btn.textContent = originalText;
+                     btn.disabled = false;
+                     return;
                 }
 
                 fetch(GOOGLE_SCRIPT_URL, {
@@ -897,14 +947,14 @@
                 .then(response => response.json())
                 .then(data => {
                     if(data.status === 'success') {
-                        alert("✅ Archivo guardado correctamente en Google Drive.");
+                        alert(`✅ Archivo "${filename}" guardado correctamente en Drive.`);
                     } else {
                         alert("❌ Error en Google: " + data.message);
                     }
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    alert("⚠️ Se envió la solicitud. Verifica en tu carpeta de Drive si apareció el archivo.");
+                    alert("⚠️ Se envió la solicitud. Verifica tu Drive.");
                 })
                 .finally(() => {
                     btn.textContent = originalText;
@@ -965,4 +1015,3 @@
     </script>
 </body>
 </html>
-            
